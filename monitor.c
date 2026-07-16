@@ -49,7 +49,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
         pid_t pid_worker = fork();
         if (pid_worker == 0) {
             close(tuberia[1]); 
-            ejecutar_worker(tuberia[0], ruta_destino);
+            ejecutar_worker(tuberia[0], ruta_destino, ruta_origen);
             exit(0);
         }
     }
@@ -69,6 +69,10 @@ void monitor(int* tuberia, const char* ruta_origen) {
         scan_dir((char*)ruta_origen);
         //bucle for hasta que termine de revisar todos los files encontrados
         for (int i = 0; i < cant_usada; i++) {
+            // no copiar direcotrios
+            if (!S_ISREG(memoria_metadatos[i].permisos_tipo)) {
+                continue;
+            }
             // se obtiene el nombre del archivo actual del arreglo del scaner
             char ruta_compr_temporal[1024];
             strncpy(ruta_compr_temporal, memoria_metadatos[i].ruta, sizeof(ruta_compr_temporal) - 1);

@@ -1,20 +1,15 @@
 #include "./headers/stats.h"
 #include <fcntl.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utime.h>
-#define LOG_DEBUG "minisync.log"
 
 int copiar (char* ruta_origen, char* ruta_destino){
-    int fd_debug = open(LOG_DEBUG , O_WRONLY | O_CREAT | O_APPEND, 0644);
     int fd_origen, fd_guardado;
     char buffer[4096];
     ssize_t cant_bytes;
     long bytes_totales = 0;
     //se abre el archivo del que copiar
-    write(fd_debug, "\n ruta que recibe copiador:", 27);
-    write (fd_debug, ruta_origen, strlen(ruta_origen));
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
         write(2, "\nerror al abrir el archivo del cual copiar en copiador", 54);
