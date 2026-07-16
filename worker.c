@@ -6,6 +6,7 @@
 #include <string.h>
 #include <mqueue.h>
 #include <libgen.h>
+#define LOG_DEBUG "minisync.log"
 
 //funcion para crear los directorios necesarios para el archivo a copiar
 void crear_directorios(const char* ruta_completa) {
@@ -22,6 +23,7 @@ void crear_directorios(const char* ruta_completa) {
 }
 
 void ejecutar_worker(int pipe_lectura, const char *ruta_destino) {
+    int fd_debug = open( LOG_DEBUG, O_WRONLY | O_CREAT | O_APPEND, 0644);
     char ruta_a_copiar[1024];
     char ruta_guardado[2048];
     //se abre una cola de mensajes para logger
@@ -33,9 +35,9 @@ void ejecutar_worker(int pipe_lectura, const char *ruta_destino) {
     //bucle que se ejecuta cuando el monitor lo manda a hacer copias
     while (read(pipe_lectura, ruta_a_copiar, sizeof(ruta_a_copiar)) > 0) {
         char copia_ruta[1024];
-        write(1, "\n ruta que recibe worker:", 25);
-        write (1,copia_ruta,55);
-        write(1,"\n",1);
+        write(fd_debug, "\n ruta que recibe worker:", 25);
+        write (fd_debug, copia_ruta, strlen(copia_ruta));
+        write(fd_debug,"\n",1);
         strcpy(copia_ruta, ruta_a_copiar);
         //obtiene el nombre del archivo y luego se contruye la ruta del backup
         char* nombre_archivo = basename(copia_ruta);

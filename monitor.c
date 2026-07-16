@@ -106,7 +106,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
                 }
                 //verificar que no se envio ya en el ciclo
                 if (!ya_enviado) {
-                    write(tuberia[1], ruta_relativa, strlen(ruta_relativa) + 1);
+                    write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
                     // Registrar que lo enviamos
                     strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
                     cant_enviados++;
@@ -115,7 +115,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
         }
         // Los workers actualizan las estadísticas y el monitor las muestra en consola
         struct stats* est = obtener_stats();
-        /*write(1, "\n ---Estadísticas Actuales:\n", 30);
+        write(1, "\n ---Estadísticas Actuales:\n", 30);
         write(1, "  Archivos copiados: ", 21);
         escribir_numero(est->archivos_copiados);
         write(1, "\n", 1); 
@@ -125,7 +125,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
         write(1, "  Errores: ", 11);
         escribir_numero(est->errores);
         write(1, "\n", 1);
-        */
+        
         liberar_escaner();
         sleep(5); 
     }
