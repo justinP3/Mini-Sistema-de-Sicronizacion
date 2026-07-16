@@ -48,7 +48,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
         pid_t pid_worker = fork();
         if (pid_worker == 0) {
             close(tuberia[1]); 
-            ejecutar_worker(tuberia[0], ruta_destino);
+            ejecutar_worker(tuberia[0], ruta_destino, ruta_origen);
             exit(0);
         }
     }
@@ -71,11 +71,21 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
             char ruta_compr_temporal[1024];
             strncpy(ruta_compr_temporal, memoria_metadatos[i].ruta, sizeof(ruta_compr_temporal) - 1);
             ruta_compr_temporal[sizeof(ruta_compr_temporal) - 1] = '\0';
-            char* nombre_file = basename(ruta_compr_temporal);
+            
+            // Calcular ruta relativa para comparar en backup
+            char ruta_relativa[1024];
+            if (strncmp(memoria_metadatos[i].ruta, ruta_origen, strlen(ruta_origen)) == 0) {
+                strcpy(ruta_relativa, memoria_metadatos[i].ruta + strlen(ruta_origen) + 1);
+            } else {
+                char* nombre_file = basename(ruta_compr_temporal);
+                strcpy(ruta_relativa, nombre_file);
+            }
+            
             // se construye la ruta en el directorio de backup
             strcpy(ruta_backup, ruta_destino);
             strcat(ruta_backup, "/");
-            strcat(ruta_backup, nombre_file);
+            strcat(ruta_backup, ruta_relativa);
+            
             // busca si el archivo ya esta en el back up para copiarlo directamente
             int necesita_copia = 0;
             if (stat(ruta_backup, &stat_backup) == -1) {
@@ -100,7 +110,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
                     
                     write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
                 
-                    // ← Registrar que lo enviamos
+                    // Registrar que lo enviamos
                     strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
                     cant_enviados++;
                 }
