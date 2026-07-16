@@ -1,3 +1,4 @@
+#include "headers/scaner.h"
 #include "./headers/stats.h"
 #include <stdlib.h>
 #include <string.h>
@@ -5,14 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-//estructura de los metadatos de los archivos a guardar
-struct metadatos_file {
-    char* ruta;
-    ino_t inodo;
-    off_t tamanio;
-    mode_t permisos_tipo;
-    time_t fecha_modificacion;
-};
+//estructura 
+struct metadatos_file;
 //asignacion dinamica de memoria
 struct metadatos_file *memoria_metadatos = NULL;
 int cant_usada;

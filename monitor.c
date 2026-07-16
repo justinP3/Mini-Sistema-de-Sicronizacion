@@ -31,7 +31,7 @@ void escribir_numero(long numero) {
     }
 }
 
-void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
+void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
     // se hace daemon
     pid_t pid_daemon = fork();
     if (pid_daemon < 0) {
@@ -48,7 +48,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
         pid_t pid_worker = fork();
         if (pid_worker == 0) {
             close(tuberia[1]); 
-            ejecutar_worker(tuberia[0], ruta_destino, ruta_origen);
+            ejecutar_worker(tuberia[0], &ruta_destino);
             exit(0);
         }
     }
@@ -59,11 +59,13 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
     //array para saber que archivos ya se enviaron en el ciclo
      char archivos_enviados[100][1024];
     int cant_enviados = 0;
+
+
     //bucle infinito que sincronizara cada 5 segundos la carpeta
     while (1) {
         liberar_escaner();
         cant_enviados = 0;
-        //se escane la carpeta
+        //se escanea la carpeta
         scan_dir((char*)ruta_origen);
         //bucle for hasta que termine de revisar todos los files encontrados
         for (int i = 0; i < cant_usada; i++) {
@@ -71,7 +73,6 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
             char ruta_compr_temporal[1024];
             strncpy(ruta_compr_temporal, memoria_metadatos[i].ruta, sizeof(ruta_compr_temporal) - 1);
             ruta_compr_temporal[sizeof(ruta_compr_temporal) - 1] = '\0';
-            
             // Calcular ruta relativa para comparar en backup
             char ruta_relativa[1024];
             if (strncmp(memoria_metadatos[i].ruta, ruta_origen, strlen(ruta_origen)) == 0) {
@@ -80,15 +81,13 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
                 char* nombre_file = basename(ruta_compr_temporal);
                 strcpy(ruta_relativa, nombre_file);
             }
-            
             // se construye la ruta en el directorio de backup
-            strcpy(ruta_backup, ruta_destino);
+            strcpy(ruta_backup, &ruta_destino);
             strcat(ruta_backup, "/");
             strcat(ruta_backup, ruta_relativa);
-            
             // busca si el archivo ya esta en el back up para copiarlo directamente
             int necesita_copia = 0;
-            if (stat(ruta_backup, &stat_backup) == -1) {
+            if (lstat(ruta_backup, &stat_backup) == -1) {
                 necesita_copia = 1;
             } else {
                 // en caso de existir se compara la fecha para actualizarlo o no
@@ -108,7 +107,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
                 //verificar que no se envio ya en el ciclo
                 if (!ya_enviado) {
                     
-                    write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
+                    write(tuberia[1], ruta_relativa, strlen(ruta_relativa) + 1);
                 
                     // Registrar que lo enviamos
                     strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
@@ -116,6 +115,8 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
                 }
             }
         }
+
+
         // Los workers actualizan las estadísticas y el monitor las muestra en consola
         struct stats* est = obtener_stats();
         write(1, "\n ---Estadísticas Actuales:\n", 30);
@@ -137,10 +138,9 @@ int main(int argc, char** argv) {
     shm_unlink("/sync_stats");
     mq_unlink("/sync_log");
     unlink("minisync.log");
-
     // varificar y mostrar si faltan argunmentos
-    if (argc != 3) {
-        write(1,"Formato a usar: ./minisync <directorio_origen> <directorio_backup>\n", 68 );
+    if (argc != 2) {
+        write(1,"Formato a usar: ./minisync <directorio_origen>\n", 68 );
         return 1;
     }
     //se incializa el log y stats
@@ -159,5 +159,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     // se ejecuta el monitor
-    monitor(tuberia, argv[1], argv[2]);
+    char* back_up = "/home/rayquaza/workspace/Sicronizador/backup";
+    monitor(tuberia, argv[1], *back_up);
 }

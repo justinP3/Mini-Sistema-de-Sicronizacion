@@ -1,4 +1,0 @@
-{
-    // Disable inlay hints for Java parameter names in this workspace/folder
-    "java.inlayHints.parameterNames.enabled": "none"
-}

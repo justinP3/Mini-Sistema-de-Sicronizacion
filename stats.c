@@ -5,10 +5,9 @@
 
 static struct stats *stats = NULL;
 static sem_t *semaforo = NULL;
-static int fd_stat = -1;
 
 void iniciar_stats(){
-    fd_stat = shm_open("/sync_stats", O_CREAT | O_RDWR, 0666);
+    int fd_stat = shm_open("/sync_stats", O_CREAT | O_RDWR, 0666);
     ftruncate(fd_stat, sizeof(struct stats));
     stats = mmap(NULL, sizeof(struct stats), PROT_READ | PROT_WRITE, MAP_SHARED, fd_stat, 0);
     semaforo = sem_open("/minisync_sem", O_CREAT, 0666, 1);

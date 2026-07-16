@@ -1,10 +1,25 @@
 #include "./headers/copiador.h"
 #include "./headers/stats.h"
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include <mqueue.h>
 #include <libgen.h>
+
+//funcion para crear los directorios necesarios para el archivo a copiar
+void crear_directorios(const char* ruta_completa) {
+    char ruta_temporal[2048];
+    strcpy(ruta_temporal, ruta_completa);
+    for (int i = 1; ruta_temporal[i] != '\0'; i++) {
+        // obtiene direcotrio por directorio creandolo en caso de no existir en backup
+        if (ruta_temporal[i] == '/') {
+            ruta_temporal[i] = '\0';
+            mkdir(ruta_temporal, 0755);
+            ruta_temporal[i] = '/';
+        }
+    }
+}
 
 void ejecutar_worker(int pipe_lectura, const char* ruta_destino) {
     char ruta_a_copiar[1024];
@@ -24,6 +39,8 @@ void ejecutar_worker(int pipe_lectura, const char* ruta_destino) {
         strcpy(ruta_guardado, ruta_destino);
         strcat(ruta_guardado, "/");
         strcat(ruta_guardado, nombre_archivo);
+        // crea los direcotrios
+        crear_directorios(ruta_guardado);
         //se ejecuta el copiado del archivo
         if (copiar(ruta_a_copiar, ruta_guardado) == 0) {
             //envia el nombre del archivo al logger

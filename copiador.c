@@ -1,12 +1,15 @@
 #include "./headers/stats.h"
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <utime.h>
 
 int copiar (char* ruta_origen, char* ruta_destino){
     int fd_origen, fd_guardado;
     char buffer[4096];
     ssize_t cant_bytes;
     long bytes_totales = 0;
+    struct stat stat_origen;
     //se abre el archivo del que copiar
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
