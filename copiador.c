@@ -9,18 +9,17 @@ int copiar (char* ruta_origen, char* ruta_destino){
     char buffer[4096];
     ssize_t cant_bytes;
     long bytes_totales = 0;
-    struct stat stat_origen;
     //se abre el archivo del que copiar
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
-        write(1, "error al abrir el archivo del cual copiar en copiador", 54);
+        write(2, "error al abrir el archivo del cual copiar en copiador", 53);
         sumar_error();
         return -1;
     }
     // se abre el archivo a donde se copia
     fd_guardado = open(ruta_destino, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd_guardado == -1) {
-         write(1, "error al abrir el archivo donde copiar en copiador", 51);
+         write(2, "error al abrir el archivo donde copiar en copiador", 51);
         sumar_error();
         return -1;
     }

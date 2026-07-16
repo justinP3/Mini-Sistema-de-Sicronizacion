@@ -4,6 +4,7 @@
 #include "./headers/worker.h"
 #include <libgen.h>
 #include <mqueue.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -31,7 +32,8 @@ void escribir_numero(long numero) {
     }
 }
 
-void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
+void monitor(int* tuberia, const char* ruta_origen) {
+    const char* ruta_destino = "/home/rayquaza/workspace/Sicronizador/backup";
     // se hace daemon
     pid_t pid_daemon = fork();
     if (pid_daemon < 0) {
@@ -48,7 +50,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
         pid_t pid_worker = fork();
         if (pid_worker == 0) {
             close(tuberia[1]); 
-            ejecutar_worker(tuberia[0], &ruta_destino);
+            ejecutar_worker(tuberia[0], ruta_destino);
             exit(0);
         }
     }
@@ -63,7 +65,6 @@ void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
 
     //bucle infinito que sincronizara cada 5 segundos la carpeta
     while (1) {
-        liberar_escaner();
         cant_enviados = 0;
         //se escanea la carpeta
         scan_dir((char*)ruta_origen);
@@ -82,9 +83,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
                 strcpy(ruta_relativa, nombre_file);
             }
             // se construye la ruta en el directorio de backup
-            strcpy(ruta_backup, &ruta_destino);
-            strcat(ruta_backup, "/");
-            strcat(ruta_backup, ruta_relativa);
+            snprintf(ruta_backup, sizeof(ruta_backup), "%s/%s", ruta_destino, ruta_relativa);
             // busca si el archivo ya esta en el back up para copiarlo directamente
             int necesita_copia = 0;
             if (lstat(ruta_backup, &stat_backup) == -1) {
@@ -130,6 +129,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char ruta_destino) {
         escribir_numero(est->errores);
         write(1, "\n", 1);
 
+        liberar_escaner();
         sleep(5); 
     }
 }
@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
     unlink("minisync.log");
     // varificar y mostrar si faltan argunmentos
     if (argc != 2) {
-        write(1,"Formato a usar: ./minisync <directorio_origen>\n", 68 );
+        write(1,"Formato a usar: ./minisync <directorio_origen>\n", 48 );
         return 1;
     }
     //se incializa el log y stats
@@ -159,6 +159,5 @@ int main(int argc, char** argv) {
         return 1;
     }
     // se ejecuta el monitor
-    char* back_up = "/home/rayquaza/workspace/Sicronizador/backup";
-    monitor(tuberia, argv[1], *back_up);
+    monitor(tuberia, argv[1]);
 }
