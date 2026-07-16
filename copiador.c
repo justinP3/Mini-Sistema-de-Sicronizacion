@@ -10,9 +10,11 @@ int copiar (char* ruta_origen, char* ruta_destino){
     ssize_t cant_bytes;
     long bytes_totales = 0;
     //se abre el archivo del que copiar
+    write(1, "\n ruta que recibe copiador:", 27);
+    write (1,ruta_origen,55);
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
-        write(2, "error al abrir el archivo del cual copiar en copiador", 53);
+        write(2, "\nerror al abrir el archivo del cual copiar en copiador", 54);
         sumar_error();
         return -1;
     }

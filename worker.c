@@ -21,7 +21,7 @@ void crear_directorios(const char* ruta_completa) {
     }
 }
 
-void ejecutar_worker(int pipe_lectura, const char* ruta_destino) {
+void ejecutar_worker(int pipe_lectura, const char *ruta_destino) {
     char ruta_a_copiar[1024];
     char ruta_guardado[2048];
     //se abre una cola de mensajes para logger
@@ -33,6 +33,9 @@ void ejecutar_worker(int pipe_lectura, const char* ruta_destino) {
     //bucle que se ejecuta cuando el monitor lo manda a hacer copias
     while (read(pipe_lectura, ruta_a_copiar, sizeof(ruta_a_copiar)) > 0) {
         char copia_ruta[1024];
+        write(1, "\n ruta que recibe worker:", 25);
+        write (1,copia_ruta,55);
+        write(1,"\n",1);
         strcpy(copia_ruta, ruta_a_copiar);
         //obtiene el nombre del archivo y luego se contruye la ruta del backup
         char* nombre_archivo = basename(copia_ruta);

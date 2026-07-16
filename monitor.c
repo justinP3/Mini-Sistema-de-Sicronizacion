@@ -4,7 +4,6 @@
 #include "./headers/worker.h"
 #include <libgen.h>
 #include <mqueue.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -83,7 +82,9 @@ void monitor(int* tuberia, const char* ruta_origen) {
                 strcpy(ruta_relativa, nombre_file);
             }
             // se construye la ruta en el directorio de backup
-            snprintf(ruta_backup, sizeof(ruta_backup), "%s/%s", ruta_destino, ruta_relativa);
+            strcpy(ruta_backup, ruta_destino);
+            strcat(ruta_backup, "/");
+            strcat(ruta_backup, ruta_relativa);
             // busca si el archivo ya esta en el back up para copiarlo directamente
             int necesita_copia = 0;
             if (lstat(ruta_backup, &stat_backup) == -1) {
@@ -105,20 +106,16 @@ void monitor(int* tuberia, const char* ruta_origen) {
                 }
                 //verificar que no se envio ya en el ciclo
                 if (!ya_enviado) {
-                    
                     write(tuberia[1], ruta_relativa, strlen(ruta_relativa) + 1);
-                
                     // Registrar que lo enviamos
                     strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
                     cant_enviados++;
                 }
             }
         }
-
-
         // Los workers actualizan las estadísticas y el monitor las muestra en consola
         struct stats* est = obtener_stats();
-        write(1, "\n ---Estadísticas Actuales:\n", 30);
+        /*write(1, "\n ---Estadísticas Actuales:\n", 30);
         write(1, "  Archivos copiados: ", 21);
         escribir_numero(est->archivos_copiados);
         write(1, "\n", 1); 
@@ -128,7 +125,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
         write(1, "  Errores: ", 11);
         escribir_numero(est->errores);
         write(1, "\n", 1);
-
+        */
         liberar_escaner();
         sleep(5); 
     }
