@@ -56,8 +56,13 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
     //se realia el proceso para backup de la carpeta elejida
     char ruta_backup[2048];
     struct stat stat_backup;
+    //array para saber que archivos ya se enviaron en el ciclo
+     char archivos_enviados[100][1024];
+    int cant_enviados = 0;
     //bucle infinito que sincronizara cada 5 segundos la carpeta
     while (1) {
+        liberar_escaner();
+        cant_enviados = 0;
         //se escane la carpeta
         scan_dir((char*)ruta_origen);
         //bucle for hasta que termine de revisar todos los files encontrados
@@ -83,7 +88,22 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
             }
             // se realiza la copia en back up si necesita enviando el nombre del archivo al worker
             if (necesita_copia) {
-                write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
+                int ya_enviado = 0;
+                for (int j = 0; j < cant_enviados; j++) {
+                    if (strcmp(archivos_enviados[j], memoria_metadatos[i].ruta) == 0) {
+                        ya_enviado = 1;
+                        break;
+                    }
+                }
+                //verificar que no se envio ya en el ciclo
+                if (!ya_enviado) {
+                    
+                    write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
+                
+                    // ← Registrar que lo enviamos
+                    strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
+                    cant_enviados++;
+                }
             }
         }
         // Los workers actualizan las estadísticas y el monitor las muestra en consola
@@ -98,8 +118,7 @@ void monitor(int* tuberia, const char* ruta_origen, const char* ruta_destino) {
         write(1, "  Errores: ", 11);
         escribir_numero(est->errores);
         write(1, "\n", 1);
-        
-        liberar_escaner();
+
         sleep(5); 
     }
 }

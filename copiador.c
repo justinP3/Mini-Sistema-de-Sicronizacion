@@ -6,6 +6,7 @@ int copiar (char* ruta_origen, char* ruta_destino){
     int fd_origen, fd_guardado;
     char buffer[4096];
     ssize_t cant_bytes;
+    long bytes_totales = 0;
     //se abre el archivo del que copiar
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
@@ -28,9 +29,10 @@ int copiar (char* ruta_origen, char* ruta_destino){
             close(fd_guardado);
             return -1;
         }
+        bytes_totales += cant_bytes;
     }
     close(fd_guardado);
     close(fd_origen);
-    sumar_copiado(0);
+    sumar_copiado(bytes_totales);
     return 0;
 }
