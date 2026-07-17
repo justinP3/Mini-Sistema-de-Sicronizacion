@@ -8,19 +8,15 @@
 #include <libgen.h>
 
 //funcion para crear los directorios necesarios para el archivo a copiar
-void crear_directorios(const char* ruta_completa) {
-    char ruta_temporal[2048];
-    strcpy(ruta_temporal, ruta_completa);
-    for (int i = 1; ruta_temporal[i] != '\0'; i++) {
-        // obtiene direcotrio por directorio creandolo en caso de no existir en backup
-        if (ruta_temporal[i] == '/') {
-            ruta_temporal[i] = '\0';
-            mkdir(ruta_temporal, 0755);
-            ruta_temporal[i] = '/';
+void crear_directorios(char* ruta) {
+    for (char *p = ruta + 1; *p; p++) {
+        if (*p == '/') {
+            *p = '\0';
+            mkdir(ruta, 0755);
+            *p = '/';
         }
     }
 }
-
 void ejecutar_worker(int pipe_lectura, const char *ruta_destino, const char *ruta_origen) {
     char ruta_a_copiar[1024];
     char ruta_guardado[2048];
@@ -33,7 +29,7 @@ void ejecutar_worker(int pipe_lectura, const char *ruta_destino, const char *rut
     }
     //bucle que se ejecuta cuando el monitor lo manda a hacer copias
     while (read(pipe_lectura, ruta_a_copiar, sizeof(ruta_a_copiar)) > 0) {
-        // si no necesita de carpetas lo copia directo
+        // Calcular ruta relativa a partir de ruta_origen
         if (strncmp(ruta_a_copiar, ruta_origen, strlen(ruta_origen)) == 0) {
             strcpy(ruta_relativa, ruta_a_copiar + strlen(ruta_origen) + 1);
         } else {

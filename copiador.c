@@ -9,17 +9,24 @@ int copiar (char* ruta_origen, char* ruta_destino){
     char buffer[4096];
     ssize_t cant_bytes;
     long bytes_totales = 0;
+    struct stat stat_origen;
+     //se obtiene los metadatos del archivo original
+    if (stat(ruta_origen, &stat_origen) == -1) {
+        write(2, "Error stat origen\n", 18);
+        sumar_error();
+        return -1;
+    }
     //se abre el archivo del que copiar
     fd_origen = open(ruta_origen, O_RDONLY);
     if (fd_origen == -1) {
-        write(2, "\nerror al abrir el archivo del cual copiar en copiador", 54);
+        write(2, "\nerror al abrir el archivo de origen en copiador", 49);
         sumar_error();
         return -1;
     }
     // se abre el archivo a donde se copia
     fd_guardado = open(ruta_destino, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd_guardado == -1) {
-         write(2, "error al abrir el archivo donde copiar en copiador", 51);
+        write(2, "error al abrir el archivo dde destino en copiador", 49);
         sumar_error();
         return -1;
     }
@@ -32,6 +39,11 @@ int copiar (char* ruta_origen, char* ruta_destino){
             return -1;
         }
         bytes_totales += cant_bytes;
+    }
+    //copia los permisos del archivo ariginal
+    if (chmod(ruta_destino, stat_origen.st_mode) == -1) {
+        write(2, "Error al copia permisos\n", 12);
+        sumar_error();
     }
     close(fd_guardado);
     close(fd_origen);

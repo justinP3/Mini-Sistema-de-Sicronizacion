@@ -4,35 +4,17 @@
 #include "./headers/worker.h"
 #include <libgen.h>
 #include <mqueue.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
 #define NUM_WORKERS 2 
-
-// Función para imprimir números del stat
-void escribir_numero(long numero) {
-    char buffer[32];
-    int i = 0;
-    if (numero == 0) {
-        write(1, "0", 1);
-        return;
-    }
-    // extrae los dígitos
-    while (numero > 0) {
-        buffer[i] = (numero % 10) + '0';
-        numero /= 10;
-        i++;
-    }
-    // imprime los dígitos
-    for (int j = i - 1; j >= 0; j--) {
-        write(1, &buffer[j], 1);
-    }
-}
+#define RUTA_BACKUP "./backup"
 
 void monitor(int* tuberia, const char* ruta_origen) {
-    const char* ruta_destino = "/home/rayquaza/workspace/Sicronizador/backup";
+    mkdir(RUTA_BACKUP, 0755);
     // se hace daemon
     pid_t pid_daemon = fork();
     if (pid_daemon < 0) {
@@ -43,13 +25,12 @@ void monitor(int* tuberia, const char* ruta_origen) {
         exit(0);
     }
     setsid();
-    chdir("/");
     // se crean la cantidad de Workers para que ejecuten el copiado cada uno
     for (int i = 0; i < NUM_WORKERS; i++) {
         pid_t pid_worker = fork();
         if (pid_worker == 0) {
             close(tuberia[1]); 
-            ejecutar_worker(tuberia[0], ruta_destino, ruta_origen);
+            ejecutar_worker(tuberia[0], RUTA_BACKUP, ruta_origen);
             exit(0);
         }
     }
@@ -57,22 +38,15 @@ void monitor(int* tuberia, const char* ruta_origen) {
     //se realia el proceso para backup de la carpeta elejida
     char ruta_backup[2048];
     struct stat stat_backup;
-    //array para saber que archivos ya se enviaron en el ciclo
-     char archivos_enviados[100][1024];
-    int cant_enviados = 0;
-
 
     //bucle infinito que sincronizara cada 5 segundos la carpeta
     while (1) {
-        cant_enviados = 0;
         //se escanea la carpeta
         scan_dir((char*)ruta_origen);
         //bucle for hasta que termine de revisar todos los files encontrados
         for (int i = 0; i < cant_usada; i++) {
             // no copiar direcotrios
-            if (!S_ISREG(memoria_metadatos[i].permisos_tipo)) {
-                continue;
-            }
+            if (!S_ISREG(memoria_metadatos[i].permisos_tipo))  continue;
             // se obtiene el nombre del archivo actual del arreglo del scaner
             char ruta_compr_temporal[1024];
             strncpy(ruta_compr_temporal, memoria_metadatos[i].ruta, sizeof(ruta_compr_temporal) - 1);
@@ -86,7 +60,7 @@ void monitor(int* tuberia, const char* ruta_origen) {
                 strcpy(ruta_relativa, nombre_file);
             }
             // se construye la ruta en el directorio de backup
-            strcpy(ruta_backup, ruta_destino);
+            strcpy(ruta_backup, RUTA_BACKUP);
             strcat(ruta_backup, "/");
             strcat(ruta_backup, ruta_relativa);
             // busca si el archivo ya esta en el back up para copiarlo directamente
@@ -101,35 +75,16 @@ void monitor(int* tuberia, const char* ruta_origen) {
             }
             // se realiza la copia en back up si necesita enviando el nombre del archivo al worker
             if (necesita_copia) {
-                int ya_enviado = 0;
-                for (int j = 0; j < cant_enviados; j++) {
-                    if (strcmp(archivos_enviados[j], memoria_metadatos[i].ruta) == 0) {
-                        ya_enviado = 1;
-                        break;
-                    }
-                }
-                //verificar que no se envio ya en el ciclo
-                if (!ya_enviado) {
-                    write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);
-                    // Registrar que lo enviamos
-                    strcpy(archivos_enviados[cant_enviados], memoria_metadatos[i].ruta);
-                    cant_enviados++;
+                    write(tuberia[1], memoria_metadatos[i].ruta, strlen(memoria_metadatos[i].ruta) + 1);            
                 }
             }
-        }
         // Los workers actualizan las estadísticas y el monitor las muestra en consola
         struct stats* est = obtener_stats();
-        write(1, "\n ---Estadísticas Actuales:\n", 30);
-        write(1, "  Archivos copiados: ", 21);
-        escribir_numero(est->archivos_copiados);
-        write(1, "\n", 1); 
-        write(1, "  Bytes copiados: ", 18);
-        escribir_numero(est->bytes_copiados);
-        write(1, "\n", 1); 
-        write(1, "  Errores: ", 11);
-        escribir_numero(est->errores);
-        write(1, "\n", 1);
-        
+        char buf[256];
+        int len = snprintf(buf, sizeof(buf),
+            "\n---Estadísticas Actuales:\n  Archivos copiados: %ld\n  Bytes copiados: %ld\n  Errores: %ld\n", 
+            est->archivos_copiados, est->bytes_copiados, est->errores);
+        write(1, buf, len);
         liberar_escaner();
         sleep(5); 
     }
@@ -137,11 +92,10 @@ void monitor(int* tuberia, const char* ruta_origen) {
 
 int main(int argc, char** argv) {
     shm_unlink("/sync_stats");
-    mq_unlink("/sync_log");
     unlink("minisync.log");
     // varificar y mostrar si faltan argunmentos
     if (argc != 2) {
-        write(1,"Formato a usar: ./minisync <directorio_origen>\n", 48 );
+        write(1,"Formato correcto: ./minisync <directorio_origen>\n", 48 );
         return 1;
     }
     //se incializa el log y stats

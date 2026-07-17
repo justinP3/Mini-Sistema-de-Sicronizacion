@@ -9,13 +9,13 @@
 #define LOG_FILE "minisync.log"
 
 void iniciar_logger() {
-    unlink(LOG_FILE);
-    mq_unlink(COLA_NOMBRE);
     struct mq_attr atributos_cola;
     atributos_cola.mq_flags = 0;
     atributos_cola.mq_maxmsg = 10;
     atributos_cola.mq_msgsize = TAMANO_MAX;
     atributos_cola.mq_curmsgs = 0;
+    //se borra la cola antigua para evitar problemas
+    mq_unlink(COLA_NOMBRE);
     // Creamos la cola POSIX (O_CREAT)
     mqd_t cola_mensajes = mq_open(COLA_NOMBRE, O_CREAT | O_RDWR, 0666, &atributos_cola);
     if (cola_mensajes == (mqd_t)-1) {

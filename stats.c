@@ -26,9 +26,3 @@ void sumar_error(){
 struct stats* obtener_stats(){
     return stats;
 }
-void cerrar_stats(){
-    munmap(stats, sizeof(struct stats));
-    shm_unlink("/sync_stats");
-    sem_close(semaforo);
-    sem_unlink("/minisync_sem");
-}
