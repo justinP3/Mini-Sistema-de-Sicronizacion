@@ -41,16 +41,15 @@ void ejecutar_logger() {
     char buffer_mensaje[TAMANO_MAX];
     char linea_log[512];
     while (1) {
-        // mq_receive bloquea al Logger hasta que un Worker envíe un mensaje
+        // se bloquea al Logger hasta que un Worker envíe un mensaje
         ssize_t bytes_leidos = mq_receive(cola_mensajes, buffer_mensaje, TAMANO_MAX, NULL);
         if (bytes_leidos > 0) {
-            // Nos aseguramos de que el texto termine correctamente
             buffer_mensaje[bytes_leidos] = '\0'; 
-            // se obtiene la fecha y hora actual del sistema
+            // se obtiene la fecha y hora actual
             time_t tiempo_actual = time(NULL);
             struct tm *tiempo_info = localtime(&tiempo_actual);
-            char texto_fecha[64];
             // formateo de fecha a 2023-11-20 16:45:00 e imprecion 
+            char texto_fecha[64];
             strftime(texto_fecha, sizeof(texto_fecha), "%Y-%m-%d %H:%M:%S", tiempo_info);
             int tamano_linea = snprintf(linea_log, sizeof(linea_log), "[%s] copiado %s\n", texto_fecha, buffer_mensaje);
             write(fd_log, linea_log, tamano_linea);

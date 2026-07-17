@@ -10,7 +10,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define NUM_WORKERS 2 
+#define NUM_WORKERS 10 
 #define RUTA_BACKUP "./backup"
 
 void monitor(int* tuberia, const char* ruta_origen) {
@@ -47,18 +47,11 @@ void monitor(int* tuberia, const char* ruta_origen) {
         for (int i = 0; i < cant_usada; i++) {
             // no copiar direcotrios
             if (!S_ISREG(memoria_metadatos[i].permisos_tipo))  continue;
-            // se obtiene el nombre del archivo actual del arreglo del scaner
-            char ruta_compr_temporal[1024];
-            strncpy(ruta_compr_temporal, memoria_metadatos[i].ruta, sizeof(ruta_compr_temporal) - 1);
-            ruta_compr_temporal[sizeof(ruta_compr_temporal) - 1] = '\0';
-            // Calcular ruta relativa para comparar en backup
+            // se obtiene el nombre del archivo actual del arreglo del scaner y tambien salta archivos que no sean del directorio
             char ruta_relativa[1024];
             if (strncmp(memoria_metadatos[i].ruta, ruta_origen, strlen(ruta_origen)) == 0) {
                 strcpy(ruta_relativa, memoria_metadatos[i].ruta + strlen(ruta_origen) + 1);
-            } else {
-                char* nombre_file = basename(ruta_compr_temporal);
-                strcpy(ruta_relativa, nombre_file);
-            }
+            } else continue;
             // se construye la ruta en el directorio de backup
             strcpy(ruta_backup, RUTA_BACKUP);
             strcat(ruta_backup, "/");
@@ -101,7 +94,7 @@ int main(int argc, char** argv) {
     //se incializa el log y stats
     iniciar_stats(); 
     iniciar_logger();
-    //se hace fork para que un proceso entre en el if y se quede ejecutando la funcion
+    //se hace fork para quese quede ejecutando la funcion
     pid_t pid_logger = fork();
     if (pid_logger == 0) {
         ejecutar_logger();

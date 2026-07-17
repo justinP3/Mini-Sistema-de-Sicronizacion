@@ -29,15 +29,11 @@ void ejecutar_worker(int pipe_lectura, const char *ruta_destino, const char *rut
     }
     //bucle que se ejecuta cuando el monitor lo manda a hacer copias
     while (read(pipe_lectura, ruta_a_copiar, sizeof(ruta_a_copiar)) > 0) {
-        // Calcular ruta relativa a partir de ruta_origen
+        // obtien ruta relativa a partir de ruta_origen
         if (strncmp(ruta_a_copiar, ruta_origen, strlen(ruta_origen)) == 0) {
-            strcpy(ruta_relativa, ruta_a_copiar + strlen(ruta_origen) + 1);
-        } else {
-            char copia_ruta[1024];
-            strcpy(copia_ruta, ruta_a_copiar);
-            char* nombre_archivo = basename(copia_ruta);
-            strcpy(ruta_relativa, nombre_archivo);
-        }
+                 strcpy(ruta_relativa, ruta_a_copiar + strlen(ruta_origen) + 1);
+            } else continue;
+        // obtien la ruta de destino ffinal
         strcpy(ruta_guardado, ruta_destino);
         strcat(ruta_guardado, "/");
         strcat(ruta_guardado, ruta_relativa);
