@@ -35,10 +35,9 @@ make
 
 ### Para inciar el proceso de sincronizacion ingrese:  
 ./minisync (ruta de la carpeta a copiar)  
-asegurese que la carpeta no conetenga la carpeta donde esta guardado el codigo o donde se realize el backup en defecto para evitar fallos al entrar a recopiar los archivos del backup
+"nota: asegurese que la carpeta no conetenga la carpeta donde esta guardado el codigo o donde se realize el backup en defecto para evitar fallos al entrar a recopiar los archivos del backup"
 
 ### Para dejar de ejecutar ingrese:  
 killall ./minisync  
-y terminara el procesos entero 
-
+"y terminara el procesos entero"
 
