@@ -34,10 +34,10 @@ make
 
 
 ### Para inciar el proceso de sincronizacion ingrese:  
-./minysic (ruta de la carpeta a copiar)  
+./minisync (ruta de la carpeta a copiar)  
 nota: asegurese que la carpeta no conetenga la carpeta donde esta guardado el codigo o donde se realize el backup en defecto para evitar fallos al entrar a recopiar los archivos del backup
 
 ### Para dejar de ejecutar ingrese:  
-killall ./minysic  
+killall ./minisync  
 terminara el procesos entero
 
