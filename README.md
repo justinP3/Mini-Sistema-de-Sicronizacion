@@ -29,7 +29,7 @@ Se puede ver el nombre de los archivos copiados en el archivo minisync.log, aqui
 Para ver los archivos copiados osea el backup al momento de ejecutar se deberia crear dicha carpeta dentro del directorio donde tiene el codigo del
 sincronizador con el nombre backup. Solo si no ha cambiado la ruta como se menciono antes.
 ## Codigos
-###Para copilar el codigo ejecuta :  
+### Para copilar el codigo ejecuta :  
 make
 
 
